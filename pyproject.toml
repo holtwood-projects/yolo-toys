@@ -10,7 +10,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"
 authors = [
-    {name = "LessUp", email = "lessup@users.noreply.github.com"}
+    {name = "holtwood", email = "holtwood@users.noreply.github.com"}
 ]
 keywords = [
     "yolo",
@@ -67,8 +67,8 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/build-workbench/yolo-toys"
-Issues = "https://github.com/build-workbench/yolo-toys/issues"
+Repository = "https://github.com/holtwood-projects/yolo-toys"
+Issues = "https://github.com/holtwood-projects/yolo-toys/issues"
 
 # Package discovery - only include the app package
 [tool.setuptools.packages.find]
