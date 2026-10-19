@@ -13,7 +13,7 @@
 ### Docker
 
 ```bash
-docker run -p 8000:8000 ghcr.io/build-workbench/yolo-toys:latest
+docker run -p 8000:8000 ghcr.io/holtwood-projects/yolo-toys:latest
 ```
 
 Open <http://localhost:8000>.
@@ -32,7 +32,7 @@ docker run --gpus all -p 8000:8000 -e DEVICE=cuda:0 yolo-toys:cuda
 ### Local Development
 
 ```bash
-git clone https://github.com/build-workbench/yolo-toys.git
+git clone https://github.com/holtwood-projects/yolo-toys.git
 cd yolo-toys
 bash scripts/dev.sh setup
 . .venv/bin/activate
@@ -110,7 +110,7 @@ make typecheck  # 类型检查
 ### Docker
 
 ```bash
-docker run -p 8000:8000 ghcr.io/build-workbench/yolo-toys:latest
+docker run -p 8000:8000 ghcr.io/holtwood-projects/yolo-toys:latest
 ```
 
 打开 <http://localhost:8000>。
@@ -129,7 +129,7 @@ docker run --gpus all -p 8000:8000 -e DEVICE=cuda:0 yolo-toys:cuda
 ### 本地开发
 
 ```bash
-git clone https://github.com/build-workbench/yolo-toys.git
+git clone https://github.com/holtwood-projects/yolo-toys.git
 cd yolo-toys
 bash scripts/dev.sh setup
 . .venv/bin/activate
