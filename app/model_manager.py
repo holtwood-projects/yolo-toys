@@ -11,7 +11,7 @@ import logging
 import threading
 import time
 import urllib.parse
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any
 
 import numpy as np
@@ -85,7 +85,10 @@ class ModelCache(TTLCache[str, LoadedModel]):
             return
         oldest_key = min(self._access_times, key=lambda cache_key: self._access_times[cache_key])
         logger.warning("内存压力，驱逐模型缓存: %s", oldest_key)
-        self.pop(oldest_key, None)
+        # 直接调用父类删除，避免 MutableMapping.pop 回调本类 __getitem__/__delitem__
+        # 再次获取非重入锁而造成自死锁（本方法约定在锁内调用）。
+        with suppress(KeyError):
+            super().__delitem__(oldest_key)
         self._access_times.pop(oldest_key, None)
         # 尝试垃圾回收
         gc.collect()
@@ -172,16 +175,17 @@ class ModelManager:
         if not model_id or not isinstance(model_id, str):
             raise ValueError("Model ID must be a non-empty string")
 
-        # 解码 URL 编码后再次检查
-        decoded_id = urllib.parse.unquote(model_id)
-        forbidden_patterns = ["../", "..\\", "/", "\\", "\x00"]
-        for pattern in forbidden_patterns:
-            if pattern in model_id or pattern in decoded_id:
-                raise ValueError("Invalid model ID: contains forbidden character sequence")
-
         # 白名单校验：只允许加载 MODEL_REGISTRY 中登记的模型，拒绝任意路径/任意
         # 模型名的下载与加载（防止资源耗尽与恶意权重反序列化）。
+        # 注意注册表里的 HuggingFace ID 本身含 "/"（如 facebook/detr-resnet-50），
+        # 因此精确命中注册表时直接放行；路径遍历已由"必须与注册表键完全相等"挡住。
         if model_id not in MODEL_REGISTRY:
+            # 解码 URL 编码后检查非法字符，给未注册 ID 更具体的错误信息。
+            decoded_id = urllib.parse.unquote(model_id)
+            forbidden_patterns = ["../", "..\\", "/", "\\", "\x00"]
+            for pattern in forbidden_patterns:
+                if pattern in model_id or pattern in decoded_id:
+                    raise ValueError("Invalid model ID: contains forbidden character sequence")
             raise ValueError(
                 f"Unknown model ID: {model_id!r}; only models in MODEL_REGISTRY are allowed"
             )

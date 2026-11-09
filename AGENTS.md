@@ -28,7 +28,7 @@ make clean                  # 清理 __pycache__、.ruff_cache、htmlcov 等缓�
 - `app/middleware.py` / `app/metrics.py` — 安全响应头、限流、超时中间件与 Prometheus 指标
 - `app/schemas.py` / `app/params.py` — 请求/响应 Pydantic 模型与查询参数
 - `frontend/` — 原生 JS（ES Module）前端：index.html、app.js、js/{api,camera,draw}.js，字体自托管于 fonts/
-- `config/` — 环境变量样例：.env.example（Makefile 默认）、.env.development、.env.production
+- `config/` — 环境变量模板：.env.example（Makefile 默认）。`.env.development` / `.env.production` 已被 `.gitignore` 忽略，本地按需从 `.env.example` 复制并修改，不入库。
 - `deployments/docker/` — Dockerfile、Dockerfile.cuda、docker-compose.yml
 - `tests/` — pytest 测试：test_api.py、test_model_manager.py、test_coverage.py 及 test_handlers/ 按模块划分
 - `scripts/dev.sh` — 开发脚本，子命令与 Makefile 对应（setup/run/test/lint/typecheck/format/hooks/docker/clean）

@@ -328,3 +328,45 @@ class TestModelManagerValidation:
 
         loaded = manager.load_model("yolov8s.pt")
         assert loaded.model is not None
+
+    def test_huggingface_model_id_with_slash_accepted(self):
+        """注册表中的 HuggingFace ID 含 "/"，不应被路径遍历规则误杀"""
+        from unittest.mock import MagicMock
+
+        from app.handlers.base import LoadedModel
+        from app.model_manager import ModelManager
+
+        manager = ModelManager()
+        mock_handler = MagicMock()
+        mock_loaded = LoadedModel(MagicMock(), None, mock_handler, "facebook/detr-resnet-50")
+        mock_handler.load.return_value = mock_loaded
+        manager._registry.get_handler = lambda _: mock_handler  # type: ignore[method-assign]
+
+        loaded = manager.load_model("facebook/detr-resnet-50")
+        assert loaded.model is not None
+
+
+class TestModelCacheEviction:
+    """ModelCache 淘汰测试"""
+
+    def test_eviction_does_not_deadlock(self, monkeypatch):
+        """缓存满时淘汰不应因重入非重入锁而自死锁"""
+        from app import model_manager
+        from app.model_manager import ModelCache
+
+        monkeypatch.setattr(model_manager, "get_memory_usage", lambda: 0.0)
+        cache: ModelCache = ModelCache(maxsize=1, ttl=60)
+        cache["a"] = object()
+
+        done = threading.Event()
+
+        def insert_second() -> None:
+            cache["b"] = object()
+            done.set()
+
+        worker = threading.Thread(target=insert_second, daemon=True)
+        worker.start()
+        worker.join(timeout=3)
+
+        assert done.is_set(), "缓存淘汰发生死锁"
+        assert list(cache.keys()) == ["b"]

@@ -5,9 +5,16 @@ yolo-toys 是一个基于 FastAPI 的浏览器端目标检测与多模态推理�
 
 ## [Unreleased]
 
+### 变更
+
+- `config/.env.development` 与 `config/.env.production` 移出版本库（本地文件保留）：两者已被 `.gitignore` 忽略，入库属于历史遗留；需要时从 `config/.env.example` 复制修改。
+- 项目版本号由内部开发线 3.2.0 统一为开源首发版本 0.1.0（`pyproject.toml`、`app/__init__.py`、Prometheus `APP_INFO`），与本文件的正式记录一致。
+
 ### 修复
 
 - 安全：模型加载改为白名单校验，`model` 参数只接受 `MODEL_REGISTRY` 中登记的模型，拒绝任意路径/任意模型名的下载与加载，防止资源耗尽与恶意权重反序列化。
+- 修复注册表中 6 个 HuggingFace 模型（`facebook/detr-*`、`google/owlvit-*`、`Salesforce/blip-*`、`IDEA-Research/grounding-dino-*`）永远无法加载的问题：路径遍历检查会把 ID 中的 `/` 当成非法字符，导致 `/caption`、`/vqa` 默认即返回 400。现在精确命中 `MODEL_REGISTRY` 的 ID 直接放行，路径遍历检查只作用于未注册 ID。
+- 修复模型缓存淘汰时的自死锁：`ModelCache` 使用非重入 `threading.Lock`，淘汰逻辑却在锁内调用 `MutableMapping.pop`，后者会回调本类的 `__getitem__`/`__delitem__` 再次加锁。默认缓存上限 10、注册表 18 个模型，加载第 11 个模型即会挂起。现改为直接调用父类删除。
 
 ## [v0.1.0] - 2026-09-28
 ### 新增
